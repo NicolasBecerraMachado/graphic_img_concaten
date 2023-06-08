@@ -5,10 +5,12 @@ import(
 	"os"
 	"log"
 	"image"
-	"bufio"
+	//"bufio"
 	//"crypto/rand"
 	//"io"
 	"image/png"
+	"image/draw"
+	//"image/jpeg"
 	//"string"
 )
 
@@ -16,15 +18,23 @@ import(
 //joins images the image in the second parameter to the bottom in the first
 //images should have the sema bAse length
 //returns joint image
-func UneY(){
-
+func UneY(im1, im2 *image.NRGBA)(*image.NRGBA){
+	newIm := image.NewNRGBA(image.Rect(0,0,im1.Rect.Max.X, im1.Rect.Max.Y + im2.Rect.Max.Y))
+	draw.Draw(newIm, im1.Bounds(), im1, image.Pt(0,0),draw.Src)
+	draw.Draw(newIm, image.Rect(0, im1.Rect.Max.Y,im1.Rect.Max.X, im1.Rect.Max.Y + im2.Rect.Max.Y), im2, image.Pt(0,0),draw.Src)
+	fmt.Println(newIm.Bounds())
+	return newIm
 }
 
 //joins images the image in the second parameter to the image in the first
 //images should have the same height length
 //returns joint image
-func UneX(im1, im2 *image.NRGBA){
-
+func UneX(im1, im2 *image.NRGBA)(*image.NRGBA){
+	newIm := image.NewNRGBA(image.Rect(0,0,im1.Rect.Max.X + im2.Rect.Max.X, im1.Rect.Max.Y))
+	draw.Draw(newIm, im1.Bounds(), im1, image.Pt(0,0),draw.Src)
+	draw.Draw(newIm, image.Rect(im1.Rect.Max.X, 0, im1.Rect.Max.X + im2.Rect.Max.X, im1.Rect.Max.Y), im2, image.Pt(0,0),draw.Src)
+	fmt.Println(newIm.Bounds())
+	return newIm
 }
 
 //rotates image 180°
@@ -34,18 +44,17 @@ func GIRO(im *image.NRGBA) (*image.NRGBA){
 	
 	pix := make([]uint8, im.Rect.Max.X*im.Rect.Max.Y*4)
 
-	for i := 0; i < im.Rect.Max.Y; i++{
-		for j := 0; j < im.Rect.Max.Y; j++{
+	for y := 0; y < im.Rect.Max.Y; y++{
+		for x := 0; x < im.Rect.Max.X; x++{
 			for k:= 0; k < 4; k++{
-				pix[j*im.Rect.Max.X*4 + i*4 + k] = im.Pix[i*im.Rect.Max.X*4 + j*4 + k]
+				pix[y*im.Rect.Max.X*4 + x*4 + k] = im.Pix[(im.Rect.Max.Y-1-y)*im.Rect.Max.X*4 + (im.Rect.Max.X-1-x)*4 + k]
 			}
 		}
 	}
-	//rand.Read(pix)
 	created := &image.NRGBA{
 		Pix:    pix,
 		Stride: im.Rect.Max.X*2 + im.Rect.Max.Y*2,
-		Rect:   image.Rect(0,0,im.Rect.Max.Y, im.Rect.Max.X),
+		Rect:   image.Rect(0,0,im.Rect.Max.X, im.Rect.Max.Y),
 	}
 	return created
 }
@@ -71,8 +80,19 @@ func save(filePath string, img *image.NRGBA) {
 	if err != nil {
 		log.Println("Cannot create file:", err)
 	}
-	fmt.Println("weird line")
-	png.Encode(imgFile, img.SubImage(img.Rect))
+	fmt.Println("set aux")
+	//aux := img.SubImage(img.Rect)
+	fmt.Println("Problem in Encode")
+	//png.Encode(imgFile, img.SubImage(image.Rect{0,0,256,256}))
+
+	encoder := png.Encoder{CompressionLevel: png.BestCompression}
+	fmt.Println(img.Rect)
+	err = encoder.Encode(imgFile, img.SubImage(img.Rect))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
 }
 
 func main(){
@@ -88,25 +108,17 @@ func main(){
 	//call functions to make transformations
 	tst := GIRO(S)
 	
-	fmt.Println(len(S.Pix))
-
-	/*f, err := os.Create("data.txt")
-
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    defer f.Close()
-
-	_, err2 := f.WriteString(string(tst.Pix))
-
-    if err2 != nil {
-        log.Fatal(err2)
-    }*/
-
-	save("tst.png", tst)
-	//print image
-
+	tst2 := UneX(S,GIRO(R))
+	fmt.Println(tst2.Rect)
 	//store image
-	
+	save("tst.png", tst)
+	tst3:= UneY(tst2,UneX(R,GIRO(S)))
+	save("tst2.png", tst2)
+	fmt.Println(tst3.Rect)
+	save("tst3.png", tst3)
+	/*tst4:=UneY(R,S)
+	tst4 = UneX(tst4,UneY(S,R))
+	fmt.Println(tst4.Rect)
+	fmt.Println("Y done")
+	save("tst4.png", tst4)*/
 }
