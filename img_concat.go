@@ -88,6 +88,7 @@ func main(){
 	
 	S:= load("S.png")
 
+	rosa := load("rosaRoja.png")
 	//call functions to make transformations
 	/*tst := GIRO(S)
 	
@@ -113,6 +114,8 @@ func main(){
 
 	row4 :=  UneX(UneX(R,GIRO(GIRO(S))),UneX(R,GIRO(GIRO(S))))
 
-	image := UneY(UneY(row1,row2),UneY(row3,row4))
+	row5 := UneX(UneX(rosa,rosa),UneX(rosa,rosa))
+
+	image := UneY(UneY(UneY(row1,row2),UneY(row3,row4)),row5)
 	save("image.png", image)
 }
